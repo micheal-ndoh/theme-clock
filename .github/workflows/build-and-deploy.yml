@@ -1,0 +1,45 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+permissions: 
+  id-token: write
+  pages: write
+  contents: write
+jobs:
+  build:
+    # Recommended if you intend to make multiple deployments in quick succession.
+    concurrency: ci-${{ github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        # This example project is built using npm and outputs the result to the 'build' folder.
+        # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
+      - name: Install and Build 🔧
+        run: |
+          npm ci
+          npm run build
+
+      - name: Test 🧪
+        run: npm run test
+
+      - name: Setup Pages 📄🔧
+        id: pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./build
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to Github Pages 🚀
+        id: deployment
+        uses: actions/deploy-pages@v4
